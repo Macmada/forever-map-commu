@@ -395,10 +395,21 @@ function ns.DiagText()
       .. tostring(C_ChatInfo and C_ChatInfo.IsAddonMessagePrefixRegistered and C_ChatInfo.IsAddonMessagePrefixRegistered(ns.PREFIX)))
   for _, c in ipairs(clubs) do
     local on = ns.OnlineMembers(c.id)
+    if C_Club and C_Club.GetClubMembers and C_Club.GetMemberInfo then
+      local raw = {}
+      for _, mid in ipairs(C_Club.GetClubMembers(c.id) or {}) do
+        local i = C_Club.GetMemberInfo(c.id, mid)
+        if i then raw[#raw + 1] = string.format("%s→%s(%s)", tostring(i.name), tostring(ns.WhisperName(i)), tostring(i.presence)) end
+      end
+      add("  noms de la communauté → nom visé (présence) : " .. table.concat(raw, ", "))
+    end
     add(string.format("  %s : %d membre(s) connecté(s) vu(s) par l'addon : %s", c.name, #on, table.concat(on, ", ")))
   end
   local peers = {}
   for full in pairs(ns.peers or {}) do peers[#peers + 1] = full end
+  local offl = {}
+  for n in pairs(ns.offline or {}) do offl[#offl + 1] = n end
+  add("Notés absents (« aucun joueur nommé ») : " .. (#offl > 0 and table.concat(offl, ", ") or "aucun"))
   add("Membres à qui je réponds (ils m'ont envoyé leur position) : " .. (#peers > 0 and table.concat(peers, ", ") or "aucun"))
   add("Dernier envoi : " .. tostring(ns.lastSent))
   for _, r in ipairs(ns.lastResults or {}) do add("  " .. r) end

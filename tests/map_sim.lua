@@ -15,13 +15,18 @@ end
 _G.Enum = { ClubType = { BattleNet = 0, Character = 1, Guild = 2 } }
 _G.Enum.ClubMemberPresence = { Unknown = 0, Online = 1, OnlineMobile = 2, Offline = 3, Away = 4, Busy = 5 }
 local MEMBERS = { ["123456789"] = { { name = "Machin", isSelf = true, presence = 1 }, { name = "Grosbill", presence = 1 },
-                                    { name = "Lyra", presence = 3 }, { name = "Mobile", presence = 2 }, { name = "Absent-Autreroyaume", presence = 4 } },
+                                    { name = "Lyra", presence = 3 }, { name = "Mobile", presence = 2 }, { name = "Absent-Autreroyaume", presence = 4 },
+                                    { name = "Alain Tendance", guid = "Player-1-0A", presence = 1 } },
                   ["987654321"] = { { name = "Grosbill", presence = 1 } } }
 _G.C_Club = { GetSubscribedClubs = function()
   return { { clubId = "123456789", name = "Les Gnomes", clubType = 1 }, { clubId = "987654321", name = "Raid du jeudi", clubType = 1 },
            { clubId = "555", name = "Amis Battle.net", clubType = 0 } } end,
   GetClubMembers = function(id) local t = {}; for i = 1, #(MEMBERS[tostring(id)] or {}) do t[i] = i end; return t end,
   GetMemberInfo = function(id, mid) return MEMBERS[tostring(id)][mid] end }
+_G.GetPlayerInfoByGUID = function(g) if g == "Player-1-0A" then return "Prêtre", "PRIEST", "Gnome", "Gnome", 3, "Alain", "" end end
+_G.ERR_CHAT_PLAYER_NOT_FOUND_S = "Aucun joueur nommé '%s' ne joue actuellement."
+local filters = {}
+_G.ChatFrame_AddMessageEventFilter = function(ev, f) filters[ev] = f end
 local joinedCh, sent, idx = {}, {}, 0
 _G.JoinTemporaryChannel = function(name, pw) idx = idx + 1; joinedCh[name] = { idx = idx, pw = pw } end
 _G.LeaveChannelByName = function(name) joinedCh[name] = nil end
@@ -86,6 +91,32 @@ W.run(2)
 local back = false
 for _, m in ipairs(sent) do if m[3] == "WHISPER" and m[4] == "Inconnu-Forever" then back = true end end
 check(back, "premier contact : je lui réponds aussitôt (il me verra même si sa liste ne me montre pas connecté)")
+
+-- nom affiché « Alain Tendance » (capture du 05/11/2026) : message privé au vrai nom du personnage, « Alain »
+sent = {}
+ns.Broadcast(true)
+local toAlain, toSpace = false, false
+for _, m in ipairs(sent) do
+  if m[3] == "WHISPER" and m[4] == "Alain" then toAlain = true end
+  if m[3] == "WHISPER" and m[4] == "Alain Tendance" then toSpace = true end
+end
+check(toAlain and not toSpace, "message privé à « Alain » (nom du personnage), jamais à « Alain Tendance »")
+-- membre déconnecté : le message « aucun joueur nommé » est masqué, plus de nouvel envoi pendant 5 min
+check(filters.CHAT_MSG_SYSTEM and filters.CHAT_MSG_SYSTEM(nil, "CHAT_MSG_SYSTEM", "Aucun joueur nommé 'Alain' ne joue actuellement.") == true,
+      "« Aucun joueur nommé 'Alain'… » après un envoi de l'addon : masqué")
+check(filters.CHAT_MSG_SYSTEM(nil, "CHAT_MSG_SYSTEM", "Aucun joueur nommé 'Inconnu2' ne joue actuellement.") == false,
+      "même message pour un nom que l'addon n'a pas visé : laissé (c'est toi qui as écrit)")
+sent = {}
+ns.Broadcast(true)
+local again = false
+for _, m in ipairs(sent) do if m[3] == "WHISPER" and m[4] == "Alain" then again = true end end
+check(not again, "membre noté absent : plus de message privé (donc plus de spam)")
+W.fire("CLUB_MEMBER_PRESENCE_UPDATED")
+sent = {}
+ns.Broadcast(true)
+again = false
+for _, m in ipairs(sent) do if m[3] == "WHISPER" and m[4] == "Alain" then again = true end end
+check(again, "il revient en ligne : de nouveau contacté")
 
 -- distance et minicarte
 POS.x = 0.40

@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 1.1.1
+- **Plus de spam « Aucun joueur nommé … ne joue actuellement »** quand un membre se déconnecte : ce message est masqué quand il suit un envoi de l'addon, et le membre n'est plus contacté pendant 5 minutes (ou jusqu'à son retour en ligne) ; un contact qui ne donne plus de nouvelles depuis 2 minutes n'est plus contacté.
+- **Bon nom pour les messages privés** : le nom du personnage est pris de son identifiant de joueur, pas du nom affiché dans la communauté (« Alain Tendance » avec un espace n'était pas joignable : c'est sans doute pour ça que l'un ne voyait pas l'autre).
+- `/fmap diag` : noms de la communauté et nom visé pour chacun, membres notés absents.
+
 ## 1.1.0
 - **Nouveau nom : ForeverMapCommu** (dossier `ForeverMapCommu`). Si l'ancienne version « ForeverMap » est encore installée, elle est désactivée automatiquement (message dans le chat) : tape `/reload`, puis supprime le dossier `Interface\AddOns\ForeverMap`. Les réglages repartent de zéro (toutes tes communautés partagées). Compatible avec les membres qui ont encore l'ancienne version 1.0.x.
 

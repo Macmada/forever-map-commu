@@ -85,6 +85,24 @@ ns.memberClub = {}
 -- connectés (état « inconnu » tant que la liste n'est pas chargée) : la liaison devient réciproque (05/11/2026 : l'un
 -- voyait l'autre, pas l'inverse)
 ns.peers = {}
+-- Nom à viser pour un message privé : celui du personnage d'après son identifiant (GUID), pas le nom affiché par la
+-- communauté (« Alain Tendance » avec un espace : « aucun joueur nommé… », 05/11/2026). Royaume sans espaces.
+function ns.WhisperName(info)
+  if info.guid and GetPlayerInfoByGUID then
+    local ok, _, _, _, _, _, name, realm = pcall(GetPlayerInfoByGUID, info.guid)
+    if ok and name and name ~= "" then
+      return (realm and realm ~= "") and (name .. "-" .. realm:gsub("%s", "")) or name
+    end
+  end
+  local n = info.name or ""
+  if n:find("-", 1, true) then return (n:gsub("%s", "")) end
+  return n:match("^(%S+)")                       -- « Prénom Titre » : le premier mot est le nom du personnage
+end
+
+-- Membres absents : le jeu répond « aucun joueur nommé… » ; on ne les recontacte pas avant 5 min (ou leur retour)
+ns.offline, ns.recentWhisper = {}, {}
+local function IsOffline(short) local t = ns.offline[short]; return t and Now() - t < 300 end
+
 function ns.OnlineMembers(clubId)
   local out = {}
   if not (C_Club and C_Club.GetClubMembers and C_Club.GetMemberInfo) then return out end
@@ -95,8 +113,11 @@ function ns.OnlineMembers(clubId)
   for _, mid in ipairs(ids) do
     local ok2, info = pcall(C_Club.GetMemberInfo, clubId, mid)
     if ok2 and type(info) == "table" and info.name and not info.isSelf and online[info.presence or 0] then
-      out[#out + 1] = info.name
-      ns.memberClub[(info.name:match("^([^%-]+)") or info.name)] = tostring(clubId)
+      local target = ns.WhisperName(info)
+      if target then
+        out[#out + 1] = target
+        ns.memberClub[(target:match("^([^%-]+)") or target)] = tostring(clubId)
+      end
     end
   end
   return out
@@ -161,6 +182,7 @@ function ns.Broadcast(force)
   local sent = false
   local results = {}
   local function Send(kind, target)
+    if kind == "WHISPER" then ns.recentWhisper[(target:match("^([^%-]+)") or target)] = Now() end
     local ok, res = pcall(send, ns.PREFIX, msg, kind, target)
     results[#results + 1] = kind .. (target and (" " .. tostring(target)) or "") .. " = " .. (ok and tostring(res) or ("erreur " .. tostring(res)))
     sent = true
@@ -171,15 +193,15 @@ function ns.Broadcast(force)
     if on then
       for _, name in ipairs(ns.OnlineMembers(id)) do
         local short = name:match("^([^%-]+)") or name
-        if short ~= me and not done[short] and #results < 40 then done[short] = true; Send("WHISPER", name) end
+        if short ~= me and not done[short] and not IsOffline(short) and #results < 40 then done[short] = true; Send("WHISPER", name) end
       end
     end
   end
   -- 1b. membres qui nous ont envoyé leur position récemment
   for full, t in pairs(ns.peers) do
     local short = full:match("^([^%-]+)") or full
-    if Now() - t > ns.FORGET then ns.peers[full] = nil
-    elseif short ~= me and not done[short] and #results < 40 then done[short] = true; Send("WHISPER", full) end
+    if Now() - t > ns.STALE then ns.peers[full] = nil           -- plus de nouvelles depuis 2 min : on arrête de lui écrire
+    elseif short ~= me and not done[short] and not IsOffline(short) and #results < 40 then done[short] = true; Send("WHISPER", full) end
   end
   -- 2. canaux cachés (si le client les transmet un jour) et guilde
   for name in pairs(ns.channelClub or {}) do
@@ -213,6 +235,7 @@ function ns.OnAddonMessage(prefix, text, channel, sender, _, _, _, chanName)
   end
   p.t, p.src, p.name = Now(), src, Short(sender)
   local isNew = not ns.peers[sender]
+  ns.offline[Short(sender)] = nil
   ns.members[Short(sender)] = p
   if channel == "WHISPER" or channel == "CHANNEL" then
     ns.peers[sender] = Now()
@@ -257,6 +280,7 @@ handlers.ADDON_LOADED = function(name)
   db.clubs = db.clubs or {}
   if db.minimap == nil then db.minimap = true end
   if db.world == nil then db.world = true end
+  if ChatFrame_AddMessageEventFilter then ChatFrame_AddMessageEventFilter("CHAT_MSG_SYSTEM", ns.SystemFilter) end
   if C_ChatInfo and C_ChatInfo.RegisterAddonMessagePrefix then
     local ok, res = pcall(C_ChatInfo.RegisterAddonMessagePrefix, ns.PREFIX)
     ns.prefixResult = ok and tostring(res) or ("erreur " .. tostring(res))
@@ -281,6 +305,27 @@ handlers.PLAYER_LOGIN = function()
   if ns.OnLogin then ns.OnLogin() end
 end
 handlers.CHAT_MSG_ADDON = ns.OnAddonMessage
+-- un membre revient en ligne : on peut le recontacter
+handlers.CLUB_MEMBER_PRESENCE_UPDATED = function() wipe(ns.offline) end
+
+-- « Aucun joueur nommé 'X' ne joue actuellement » après un envoi de l'addon : message masqué, X noté absent
+local notFound
+function ns.SystemFilter(_, _, msg)
+  if not notFound then
+    local t = ERR_CHAT_PLAYER_NOT_FOUND_S or "No player named '%s' is currently playing."
+    notFound = "^" .. t:gsub("([%(%)%.%[%]%*%+%-%?%^%$])", "%%%1"):gsub("%%s", "(.+)") .. "$"
+  end
+  local who = msg and msg:match(notFound)
+  if not who then return false end
+  local short = who:match("^([^%-]+)") or who
+  local t = ns.recentWhisper[short] or ns.recentWhisper[who]
+  if t and Now() - t < 10 then
+    ns.offline[short] = Now()
+    for full in pairs(ns.peers) do if (full:match("^([^%-]+)") or full) == short then ns.peers[full] = nil end end
+    return true
+  end
+  return false
+end
 handlers.CLUB_ADDED = function() C_Timer.After(1, ns.SyncChannels) end
 handlers.CLUB_REMOVED = function() C_Timer.After(1, ns.SyncChannels) end
 handlers.ZONE_CHANGED_NEW_AREA = function() C_Timer.After(2, function() ns.Broadcast(true) end) end

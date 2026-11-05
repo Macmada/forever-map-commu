@@ -1,0 +1,20 @@
+name: Lint
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Luacheck
+        uses: lunarmodules/luacheck@v1
+        with:
+          args: ForeverMap
+      - name: Simulation hors jeu (fr et en)
+        run: |
+          sudo apt-get install -y -q lua5.1
+          lua5.1 tests/map_sim.lua fr
+          lua5.1 tests/map_sim.lua en

@@ -40,11 +40,15 @@ _G.Minimap.GetWidth = function() return 140 end
 _G.Minimap.GetZoom = function() return 0 end
 _G.IsIndoors = function() return false end
 
-local ns = W.load("ForeverMap")
-W.fire("ADDON_LOADED", "ForeverMap")
+local ns = W.load("ForeverMapCommu")
+W.fire("ADDON_LOADED", "ForeverMapCommu")
+local disabled
+_G.C_AddOns.IsAddOnLoaded = function(n) return n == "ForeverMap" end      -- ancienne version encore installée
+_G.C_AddOns.DisableAddOn = function(n) disabled = n end
 W.fire("PLAYER_LOGIN")
 W.run(6)
-check(ForeverMapDB and ForeverMapDB.clubs["123456789"] and ForeverMapDB.clubs["987654321"] and not ForeverMapDB.clubs["555"],
+check(disabled == "ForeverMap" and ns.oldDisabled, "ancien addon « ForeverMap » détecté et désactivé (renommage en ForeverMapCommu)")
+check(ForeverMapCommuDB and ForeverMapCommuDB.clubs["123456789"] and ForeverMapCommuDB.clubs["987654321"] and not ForeverMapCommuDB.clubs["555"],
       "première connexion : les 2 communautés de personnages sont partagées (pas la Battle.net)")
 local ch1, pw1 = ns.ChannelFor("123456789")
 check(joinedCh[ch1] and joinedCh[ch1].pw == pw1 and ch1 == "FMap123456789", "canal caché de la communauté rejoint (" .. ch1 .. ")")
@@ -120,11 +124,11 @@ SlashCmdList.FOREVERMAP("")
 check(ns.ui:IsShown(), "/fmap : fenêtre ouverte")
 ns.SetWaypoint(g)
 check(wp and wp[1] == 1426 and wp[4] == "Grosbill", "repère TomTom vers Grosbill")
-ForeverMapDB.clubs["987654321"] = nil
+ForeverMapCommuDB.clubs["987654321"] = nil
 ns.SyncChannels()
 check(not joinedCh[ns.ChannelFor("987654321")], "communauté décochée : canal quitté")
 ns.ShowOptions()
-check(ForeverMapOptionsFrame:IsShown(), "options ouvertes")
+check(ForeverMapCommuOptionsFrame:IsShown(), "options ouvertes")
 
 -- diagnostic
 local diag = ns.DiagText()

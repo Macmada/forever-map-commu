@@ -1,10 +1,10 @@
 local _, ns = ...
 
 local fr = {
-  title = "ForeverMap — tes communautés sur la carte",
+  title = "ForeverMapCommu — tes communautés sur la carte",
   members = "Membres", options = "Options",
   colName = "Nom", colZone = "Zone", colDist = "Distance", colSeen = "Vu",
-  none = "Personne pour l'instant. Les membres apparaissent quand ils ont ForeverMap et sont connectés.",
+  none = "Personne pour l'instant. Les membres apparaissent quand ils ont ForeverMapCommu et sont connectés.",
   noClub = "Choisis au moins une communauté dans les options (icône engrenage).",
   inInstance = "en donjon / raid", hiddenSelf = "Tu es invisible : ta position n'est pas envoyée.",
   yards = "%d m", far = "autre zone", ago = "il y a %d s", agoMin = "il y a %d min",
@@ -17,14 +17,15 @@ local fr = {
   shared = "Partage avec : %s", sharedNone = "Partage : aucune communauté choisie",
   helpText = "Commandes : /fmap (fenêtre), /fmap invisible, /fmap diag",
   hiddenOn = "Invisible : ta position n'est plus envoyée.", hiddenOff = "Visible : ta position est de nouveau partagée.",
-  diagTitle = "Diagnostic ForeverMap (copie ce texte)",
+  oldAddon = "L'ancienne version « ForeverMap » est encore installée : je l'ai désactivée. Tape /reload, puis supprime le dossier Interface\\AddOns\\ForeverMap.",
+  diagTitle = "Diagnostic ForeverMapCommu (copie ce texte)",
 }
 
 local en = {
-  title = "ForeverMap — your communities on the map",
+  title = "ForeverMapCommu — your communities on the map",
   members = "Members", options = "Options",
   colName = "Name", colZone = "Zone", colDist = "Distance", colSeen = "Seen",
-  none = "Nobody yet. Members show up when they have ForeverMap and are online.",
+  none = "Nobody yet. Members show up when they have ForeverMapCommu and are online.",
   noClub = "Pick at least one community in the options (gear icon).",
   inInstance = "in a dungeon / raid", hiddenSelf = "You are invisible: your position is not sent.",
   yards = "%d yd", far = "other zone", ago = "%ds ago", agoMin = "%d min ago",
@@ -37,7 +38,8 @@ local en = {
   shared = "Sharing with: %s", sharedNone = "Sharing: no community selected",
   helpText = "Commands: /fmap (window), /fmap invisible, /fmap diag",
   hiddenOn = "Invisible: your position is no longer sent.", hiddenOff = "Visible: your position is shared again.",
-  diagTitle = "ForeverMap diagnostic (copy this text)",
+  oldAddon = "The old \"ForeverMap\" version is still installed: I disabled it. Type /reload, then delete the Interface\\AddOns\\ForeverMap folder.",
+  diagTitle = "ForeverMapCommu diagnostic (copy this text)",
 }
 
 ns.lang = (GetLocale() == "frFR") and "fr" or "en"

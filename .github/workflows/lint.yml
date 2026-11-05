@@ -12,7 +12,7 @@ jobs:
       - name: Luacheck
         uses: lunarmodules/luacheck@v1
         with:
-          args: ForeverMap
+          args: ForeverMapCommu
       - name: Simulation hors jeu (fr et en)
         run: |
           sudo apt-get install -y -q lua5.1

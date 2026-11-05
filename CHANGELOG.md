@@ -1,5 +1,8 @@
 # Journal des versions
 
+## 1.1.0
+- **Nouveau nom : ForeverMapCommu** (dossier `ForeverMapCommu`). Si l'ancienne version « ForeverMap » est encore installée, elle est désactivée automatiquement (message dans le chat) : tape `/reload`, puis supprime le dossier `Interface\AddOns\ForeverMap`. Les réglages repartent de zéro (toutes tes communautés partagées). Compatible avec les membres qui ont encore l'ancienne version 1.0.x.
+
 ## 1.0.2
 - **L'un voyait l'autre, pas l'inverse** : quand un membre reçoit ta position, il te répond aussitôt avec la sienne, même si la liste de la communauté ne te montre pas connecté chez lui (état « inconnu » tant qu'elle n'est pas chargée). La liaison devient réciproque dès qu'un des deux voit l'autre.
 - `/fmap diag` liste aussi les membres à qui l'addon répond.

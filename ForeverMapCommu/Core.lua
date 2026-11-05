@@ -12,7 +12,7 @@ ns.members = {}            -- nom -> { map, x, y, level, class, zone, inst, t, s
 
 function ns.Print(fmt, ...)
   local msg = (select("#", ...) > 0) and string.format(fmt, ...) or tostring(fmt)
-  print("|cff4dc3ffForeverMap|r " .. msg)
+  print("|cff4dc3ffForeverMapCommu|r " .. msg)
 end
 
 local function Now() return GetTime() end
@@ -251,8 +251,8 @@ ns.eventFrame = ev
 local handlers = {}
 handlers.ADDON_LOADED = function(name)
   if name ~= ADDON then return end
-  ForeverMapDB = ForeverMapDB or {}
-  db = ForeverMapDB
+  ForeverMapCommuDB = ForeverMapCommuDB or {}
+  db = ForeverMapCommuDB
   ns.db = db
   db.clubs = db.clubs or {}
   if db.minimap == nil then db.minimap = true end
@@ -263,6 +263,14 @@ handlers.ADDON_LOADED = function(name)
   end
 end
 handlers.PLAYER_LOGIN = function()
+  -- ancienne version sous l'ancien nom (dossier « ForeverMap ») encore installée : on la désactive (deux addons enverraient deux fois)
+  local loaded = (C_AddOns and C_AddOns.IsAddOnLoaded and C_AddOns.IsAddOnLoaded("ForeverMap")) or (IsAddOnLoaded and IsAddOnLoaded("ForeverMap"))
+  if loaded then
+    local disable = (C_AddOns and C_AddOns.DisableAddOn) or DisableAddOn
+    if disable then pcall(disable, "ForeverMap") end
+    ns.oldDisabled = true
+    C_Timer.After(3, function() ns.Print(ns.L.oldAddon) end)
+  end
   -- première fois : toutes tes communautés de personnages sont partagées (modifiable dans les options)
   if not db.initialized then
     for _, c in ipairs(ns.Clubs()) do db.clubs[c.id] = true end

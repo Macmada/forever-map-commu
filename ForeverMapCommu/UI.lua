@@ -241,7 +241,7 @@ end
 local opt
 local function ShowOptions()
   if not opt then
-    opt = CreateFrame("Frame", "ForeverMapOptionsFrame", ui, "BasicFrameTemplateWithInset")
+    opt = CreateFrame("Frame", "ForeverMapCommuOptionsFrame", ui, "BasicFrameTemplateWithInset")
     if opt.CloseButton then opt.CloseButton:SetScript("OnClick", function() opt:Hide() end) end
     opt:SetSize(420, 320)
     opt:SetPoint("TOPRIGHT", ui, "TOPRIGHT", -10, -60)
@@ -301,7 +301,7 @@ ns.ShowOptions = ShowOptions
 
 local function CreateUI()
   if ui then return ui end
-  ui = CreateFrame("Frame", "ForeverMapFrame", UIParent, "BasicFrameTemplateWithInset")
+  ui = CreateFrame("Frame", "ForeverMapCommuFrame", UIParent, "BasicFrameTemplateWithInset")
   ns.ui = ui
   if ui.CloseButton then ui.CloseButton:SetScript("OnClick", function() ui:Hide() end) end   -- pas de HideUIPanel (bloqué en combat)
   ui:SetSize(600, 420)
@@ -313,7 +313,7 @@ local function CreateUI()
   ui:RegisterForDrag("LeftButton")
   ui:SetScript("OnDragStart", ui.StartMoving)
   ui:SetScript("OnDragStop", ui.StopMovingOrSizing)
-  tinsert(UISpecialFrames, "ForeverMapFrame")
+  tinsert(UISpecialFrames, "ForeverMapCommuFrame")
   ui:Hide()
   local logo = ui:CreateTexture(nil, "OVERLAY")
   logo:SetSize(16, 16)
@@ -373,8 +373,8 @@ function ns.DiagText()
   local out = {}
   local function add(s) out[#out + 1] = s end
   local v, build, _, iface = GetBuildInfo()
-  add(string.format("### ForeverMap %s — %s", tostring((C_AddOns and C_AddOns.GetAddOnMetadata and C_AddOns.GetAddOnMetadata("ForeverMap", "Version"))
-      or (GetAddOnMetadata and GetAddOnMetadata("ForeverMap", "Version")) or "?"), date("%Y-%m-%d %H:%M")))
+  add(string.format("### ForeverMapCommu %s — %s", tostring((C_AddOns and C_AddOns.GetAddOnMetadata and C_AddOns.GetAddOnMetadata("ForeverMapCommu", "Version"))
+      or (GetAddOnMetadata and GetAddOnMetadata("ForeverMapCommu", "Version")) or "?"), date("%Y-%m-%d %H:%M")))
   add(string.format("Client %s build %s, interface %s, %s", tostring(v), tostring(build), tostring(iface), GetLocale()))
   for _, f in ipairs({ "C_ChatInfo.SendAddonMessage", "C_Club.GetSubscribedClubs", "JoinTemporaryChannel", "GetChannelName",
                        "C_Map.GetPlayerMapPosition", "C_Map.GetWorldPosFromMapPos", "C_Map.GetMapWorldSize", "C_Map.SetUserWaypoint" }) do
@@ -415,7 +415,7 @@ end
 local diag
 function ns.ShowDiag()
   if not diag then
-    diag = CreateFrame("Frame", "ForeverMapDiagFrame", UIParent, "BasicFrameTemplateWithInset")
+    diag = CreateFrame("Frame", "ForeverMapCommuDiagFrame", UIParent, "BasicFrameTemplateWithInset")
     if diag.CloseButton then diag.CloseButton:SetScript("OnClick", function() diag:Hide() end) end
     diag:SetSize(620, 420)
     diag:SetPoint("CENTER")
@@ -454,8 +454,8 @@ ns.OnLogin = function()
   local LS = _G.LibStub
   local LDB = LS and LS("LibDataBroker-1.1", true)
   if LDB then
-    LDB:NewDataObject("ForeverMap", { type = "launcher", icon = "Interface\\Icons\\INV_Misc_Map_01", OnClick = function() ns.Toggle() end,
-      OnTooltipShow = function(tt) tt:AddLine("ForeverMap", GOLD[1], GOLD[2], GOLD[3]) end })
+    LDB:NewDataObject("ForeverMapCommu", { type = "launcher", icon = "Interface\\Icons\\INV_Misc_Map_01", OnClick = function() ns.Toggle() end,
+      OnTooltipShow = function(tt) tt:AddLine("ForeverMapCommu", GOLD[1], GOLD[2], GOLD[3]) end })
   end
 end
 
@@ -473,4 +473,4 @@ SlashCmdList.FOREVERMAP = function(msg)
   else ns.Print(L.helpText) end
 end
 
-function ForeverMap_OnCompartmentClick() ns.Toggle() end
+function ForeverMapCommu_OnCompartmentClick() ns.Toggle() end

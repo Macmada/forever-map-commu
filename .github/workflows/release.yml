@@ -16,12 +16,12 @@ jobs:
       - name: Archive et release.json (WowUp)
         run: |
           V="${GITHUB_REF_NAME#v}"
-          sed -i "s/^## Version: .*/## Version: ${V}/" ForeverMap/ForeverMap.toc
+          sed -i "s/^## Version: .*/## Version: ${V}/" ForeverMapCommu/ForeverMapCommu.toc
           mkdir dist
-          zip -r "dist/ForeverMap-${GITHUB_REF_NAME}.zip" ForeverMap
-          IFACE="$(sed -n 's/^## Interface: *//p' ForeverMap/ForeverMap.toc | tr -d ' \r' | tr ',' '\n' | sort -n | tail -1)"
-          jq -n --arg version "$GITHUB_REF_NAME" --arg file "ForeverMap-${GITHUB_REF_NAME}.zip" --argjson forever "$IFACE" \
-            '{releases: [{name: "ForeverMap", version: $version, filename: $file, nolib: false, metadata: [{flavor: "forever", interface: $forever}]}]}' \
+          zip -r "dist/ForeverMapCommu-${GITHUB_REF_NAME}.zip" ForeverMapCommu
+          IFACE="$(sed -n 's/^## Interface: *//p' ForeverMapCommu/ForeverMapCommu.toc | tr -d ' \r' | tr ',' '\n' | sort -n | tail -1)"
+          jq -n --arg version "$GITHUB_REF_NAME" --arg file "ForeverMapCommu-${GITHUB_REF_NAME}.zip" --argjson forever "$IFACE" \
+            '{releases: [{name: "ForeverMapCommu", version: $version, filename: $file, nolib: false, metadata: [{flavor: "forever", interface: $forever}]}]}' \
             > dist/release.json
           awk '/^## /{n++} n==1' CHANGELOG.md > dist/notes.md
           printf '\n---\nInstallation : WowUp, « Install from URL » avec https://github.com/Macmada/forever-map\n' >> dist/notes.md

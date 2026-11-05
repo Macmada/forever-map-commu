@@ -1,13 +1,15 @@
-# ForeverMap
+# ForeverMapCommu
 
 Les membres de tes **communautés** (et de ta guilde, en option) sur la **carte du monde** et la **minicarte**, pour **WoW Forever**.
 
-> Le jeu ne donne jamais aux addons la position d'un joueur hors de ton groupe : **chaque membre doit avoir ForeverMap**. Chacun envoie sa propre position aux autres membres de la communauté, par un canal caché propre à l'addon.
+> Le jeu ne donne jamais aux addons la position d'un joueur hors de ton groupe : **chaque membre doit avoir ForeverMapCommu**. Chacun envoie sa propre position aux autres membres de la communauté, par un canal caché propre à l'addon.
 
 ## Installation
 
 - **WowUp** : *Get Addons → Install from URL* → `https://github.com/Macmada/forever-map`
-- **À la main** : télécharge `ForeverMap-vX.zip` dans les [versions](https://github.com/Macmada/forever-map/releases) et décompresse-le dans `World of Warcraft\_forever_\Interface\AddOns`.
+- **À la main** : télécharge `ForeverMapCommu-vX.zip` dans les [versions](https://github.com/Macmada/forever-map/releases) et décompresse-le dans `World of Warcraft\_forever_\Interface\AddOns`.
+
+> Anciennement **ForeverMap** : si tu avais l'ancienne version, elle est désactivée automatiquement ; supprime ensuite le dossier `Interface\AddOns\ForeverMap`.
 
 ## Ce que ça fait
 

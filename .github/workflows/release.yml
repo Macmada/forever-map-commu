@@ -24,7 +24,7 @@ jobs:
             '{releases: [{name: "ForeverMapCommu", version: $version, filename: $file, nolib: false, metadata: [{flavor: "forever", interface: $forever}]}]}' \
             > dist/release.json
           awk '/^## /{n++} n==1' CHANGELOG.md > dist/notes.md
-          printf '\n---\nInstallation : WowUp, « Install from URL » avec https://github.com/Macmada/forever-map\n' >> dist/notes.md
+          printf '\n---\nInstallation : WowUp, « Install from URL » avec https://github.com/Macmada/forever-map-commu\n' >> dist/notes.md
       - uses: softprops/action-gh-release@v2
         with:
           files: |

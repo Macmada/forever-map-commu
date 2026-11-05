@@ -6,8 +6,8 @@ Les membres de tes **communautés** (et de ta guilde, en option) sur la **carte 
 
 ## Installation
 
-- **WowUp** : *Get Addons → Install from URL* → `https://github.com/Macmada/forever-map`
-- **À la main** : télécharge `ForeverMapCommu-vX.zip` dans les [versions](https://github.com/Macmada/forever-map/releases) et décompresse-le dans `World of Warcraft\_forever_\Interface\AddOns`.
+- **WowUp** : *Get Addons → Install from URL* → `https://github.com/Macmada/forever-map-commu`
+- **À la main** : télécharge `ForeverMapCommu-vX.zip` dans les [versions](https://github.com/Macmada/forever-map-commu/releases) et décompresse-le dans `World of Warcraft\_forever_\Interface\AddOns`.
 
 > Anciennement **ForeverMap** : si tu avais l'ancienne version, elle est désactivée automatiquement ; supprime ensuite le dossier `Interface\AddOns\ForeverMap`.
 

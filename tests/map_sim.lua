@@ -13,9 +13,15 @@ _G.strsplit = function(sep, s)
   return unpack(out)
 end
 _G.Enum = { ClubType = { BattleNet = 0, Character = 1, Guild = 2 } }
+_G.Enum.ClubMemberPresence = { Unknown = 0, Online = 1, OnlineMobile = 2, Offline = 3, Away = 4, Busy = 5 }
+local MEMBERS = { ["123456789"] = { { name = "Machin", isSelf = true, presence = 1 }, { name = "Grosbill", presence = 1 },
+                                    { name = "Lyra", presence = 3 }, { name = "Mobile", presence = 2 }, { name = "Absent-Autreroyaume", presence = 4 } },
+                  ["987654321"] = { { name = "Grosbill", presence = 1 } } }
 _G.C_Club = { GetSubscribedClubs = function()
   return { { clubId = "123456789", name = "Les Gnomes", clubType = 1 }, { clubId = "987654321", name = "Raid du jeudi", clubType = 1 },
-           { clubId = "555", name = "Amis Battle.net", clubType = 0 } } end }
+           { clubId = "555", name = "Amis Battle.net", clubType = 0 } } end,
+  GetClubMembers = function(id) local t = {}; for i = 1, #(MEMBERS[tostring(id)] or {}) do t[i] = i end; return t end,
+  GetMemberInfo = function(id, mid) return MEMBERS[tostring(id)][mid] end }
 local joinedCh, sent, idx = {}, {}, 0
 _G.JoinTemporaryChannel = function(name, pw) idx = idx + 1; joinedCh[name] = { idx = idx, pw = pw } end
 _G.LeaveChannelByName = function(name) joinedCh[name] = nil end
@@ -42,7 +48,11 @@ check(ForeverMapDB and ForeverMapDB.clubs["123456789"] and ForeverMapDB.clubs["9
       "première connexion : les 2 communautés de personnages sont partagées (pas la Battle.net)")
 local ch1, pw1 = ns.ChannelFor("123456789")
 check(joinedCh[ch1] and joinedCh[ch1].pw == pw1 and ch1 == "FMap123456789", "canal caché de la communauté rejoint (" .. ch1 .. ")")
-check(#sent == 2 and sent[1][1] == "FMAP1" and sent[1][3] == "CHANNEL", "position envoyée sur les 2 canaux")
+local wh, chn = {}, 0
+for _, m in ipairs(sent) do if m[3] == "WHISPER" then wh[m[4]] = true elseif m[3] == "CHANNEL" then chn = chn + 1 end end
+check(wh.Grosbill and wh["Absent-Autreroyaume"] and not wh.Lyra and not wh.Mobile and not wh.Machin,
+      "message privé d'addon aux membres connectés (pas hors ligne, pas mobile, pas toi), une seule fois chacun")
+check(chn == 2 and sent[1][1] == "FMAP1", "et sur les 2 canaux cachés")
 local p = ns.Decode(sent[1][2])
 check(p and p.map == 1426 and math.abs(p.x - 0.40) < 1e-4 and p.class == "PRIEST", "message décodé : carte 1426, x 0,40, prêtre")
 
@@ -58,6 +68,8 @@ check(#sent > before, "en mouvement : nouvelle position envoyée")
 W.fire("CHAT_MSG_ADDON", "FMAP1", "P|1426|0.4100|0.5000|12|MAGE|Dun Morogh|", "CHANNEL", "Grosbill-Forever", ch1, 0, 1, ch1)
 local g = ns.members.Grosbill
 check(g and g.src == "123456789" and g.level == 12 and g.class == "MAGE", "membre reçu : Grosbill (mage 12) de « Les Gnomes »")
+W.fire("CHAT_MSG_ADDON", "FMAP1", "P|1426|0.4200|0.5|9|PRIEST|Y|", "WHISPER", "Absent-Autreroyaume", "Machin", 0, 0, "")
+check(ns.members.Absent and ns.members.Absent.src == "123456789", "reçu en message privé : rattaché à sa communauté")
 W.fire("CHAT_MSG_ADDON", "FMAP1", "P|1426|0.1|0.1|5|PRIEST|X|", "CHANNEL", "Machin-Forever", ch1, 0, 1, ch1)
 check(not ns.members.Machin, "ton propre message est ignoré")
 W.fire("CHAT_MSG_ADDON", "AUTRE", "P|1426|0.1|0.1|5|PRIEST|X|", "CHANNEL", "Lyra", ch1, 0, 1, ch1)
@@ -71,7 +83,7 @@ local mx, my = ns.MinimapOffset(100, 0, 200, 70)
 check(math.abs(mx - 35) < 0.01 and math.abs(my) < 0.01, "minicarte : 100 m à l'est, rayon 200 m = 35 px à droite")
 check(ns.MinimapOffset(300, 0, 200, 70) == nil, "minicarte : hors du rayon, pas de point")
 ns.UpdateMinimapPins()
-check(ns.miniPinsShown == 1, "minicarte : un point pour Grosbill")
+check(ns.miniPinsShown == 2, "minicarte : un point pour Grosbill et un pour Absent")
 
 -- carte du monde
 _G.WorldMapFrame = W.Obj("WorldMapFrame")
@@ -79,7 +91,7 @@ WorldMapFrame.ScrollContainer = { Child = W.Obj() }
 WorldMapFrame.GetMapID = function() return 1426 end
 WorldMapFrame:Show()
 ns.UpdateWorldPins()
-check(ns.worldPinsShown == 1, "carte du monde : un point pour Grosbill")
+check(ns.worldPinsShown == 2, "carte du monde : deux points")
 
 -- instance : pas de position envoyée
 W.inInstance, W.instanceType = true, "party"

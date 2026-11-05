@@ -391,7 +391,14 @@ function ns.DiagText()
   end
   local me = ns.MyPosition()
   add("Ma position : " .. (me and (me.inst and "instance" or string.format("carte %s, %.3f, %.3f", tostring(me.map), me.x or 0, me.y or 0)) or "aucune"))
+  add("Préfixe : enregistrement " .. tostring(ns.prefixResult) .. ", enregistré "
+      .. tostring(C_ChatInfo and C_ChatInfo.IsAddonMessagePrefixRegistered and C_ChatInfo.IsAddonMessagePrefixRegistered(ns.PREFIX)))
+  for _, c in ipairs(clubs) do
+    local on = ns.OnlineMembers(c.id)
+    add(string.format("  %s : %d membre(s) connecté(s) vu(s) par l'addon : %s", c.name, #on, table.concat(on, ", ")))
+  end
   add("Dernier envoi : " .. tostring(ns.lastSent))
+  for _, r in ipairs(ns.lastResults or {}) do add("  " .. r) end
   local n = 0
   for _, p in pairs(ns.members) do
     n = n + 1

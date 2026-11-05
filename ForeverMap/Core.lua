@@ -77,6 +77,27 @@ function ns.SyncChannels()
   ns.channelClub = wanted
 end
 
+-- Membres connectés d'une communauté (pas toi, pas ceux sur l'application mobile) : { "Nom" ou "Nom-Royaume" }
+-- Envoi principal : un message privé d'addon à chacun (le client de Forever ne transmet pas les messages d'addon d'un
+-- canal personnalisé, diagnostic du 05/11/2026 : envoyés des deux côtés, jamais reçus).
+ns.memberClub = {}
+function ns.OnlineMembers(clubId)
+  local out = {}
+  if not (C_Club and C_Club.GetClubMembers and C_Club.GetMemberInfo) then return out end
+  local ok, ids = pcall(C_Club.GetClubMembers, clubId)
+  if not ok or type(ids) ~= "table" then return out end
+  local P = Enum and Enum.ClubMemberPresence or {}
+  local online = { [P.Online or 1] = true, [P.Away or 4] = true, [P.Busy or 5] = true }
+  for _, mid in ipairs(ids) do
+    local ok2, info = pcall(C_Club.GetMemberInfo, clubId, mid)
+    if ok2 and type(info) == "table" and info.name and not info.isSelf and online[info.presence or 0] then
+      out[#out + 1] = info.name
+      ns.memberClub[(info.name:match("^([^%-]+)") or info.name)] = tostring(clubId)
+    end
+  end
+  return out
+end
+
 local function ChannelIndex(name)
   if not GetChannelName then return nil end
   local id = GetChannelName(name)
@@ -134,11 +155,29 @@ function ns.Broadcast(force)
   local send = C_ChatInfo and C_ChatInfo.SendAddonMessage
   if not send then return false end
   local sent = false
+  local results = {}
+  local function Send(kind, target)
+    local ok, res = pcall(send, ns.PREFIX, msg, kind, target)
+    results[#results + 1] = kind .. (target and (" " .. tostring(target)) or "") .. " = " .. (ok and tostring(res) or ("erreur " .. tostring(res)))
+    sent = true
+  end
+  -- 1. message privé d'addon à chaque membre connecté des communautés choisies (sans doublon)
+  local done, me = {}, UnitName("player")
+  for id, on in pairs(db.clubs) do
+    if on then
+      for _, name in ipairs(ns.OnlineMembers(id)) do
+        local short = name:match("^([^%-]+)") or name
+        if short ~= me and not done[short] and #results < 40 then done[short] = true; Send("WHISPER", name) end
+      end
+    end
+  end
+  -- 2. canaux cachés (si le client les transmet un jour) et guilde
   for name in pairs(ns.channelClub or {}) do
     local idx = ChannelIndex(name)
-    if idx then pcall(send, ns.PREFIX, msg, "CHANNEL", idx); sent = true end
+    if idx then Send("CHANNEL", idx) end
   end
-  if db.guild and IsInGuild and IsInGuild() then pcall(send, ns.PREFIX, msg, "GUILD"); sent = true end
+  if db.guild and IsInGuild and IsInGuild() then Send("GUILD") end
+  ns.lastResults = results
   last = { t = Now(), inst = p.inst, map = p.map, x = p.x, y = p.y }
   ns.lastSent = msg
   return sent
@@ -157,6 +196,7 @@ function ns.OnAddonMessage(prefix, text, channel, sender, _, _, _, chanName)
   if not p then return end
   local src
   if channel == "GUILD" then src = "guild"
+  elseif channel == "WHISPER" then src = ns.memberClub[Short(sender)] or "whisper"
   else
     local club = ns.channelClub and chanName and ns.channelClub[chanName]
     src = club or "channel"
@@ -201,7 +241,10 @@ handlers.ADDON_LOADED = function(name)
   db.clubs = db.clubs or {}
   if db.minimap == nil then db.minimap = true end
   if db.world == nil then db.world = true end
-  if C_ChatInfo and C_ChatInfo.RegisterAddonMessagePrefix then pcall(C_ChatInfo.RegisterAddonMessagePrefix, ns.PREFIX) end
+  if C_ChatInfo and C_ChatInfo.RegisterAddonMessagePrefix then
+    local ok, res = pcall(C_ChatInfo.RegisterAddonMessagePrefix, ns.PREFIX)
+    ns.prefixResult = ok and tostring(res) or ("erreur " .. tostring(res))
+  end
 end
 handlers.PLAYER_LOGIN = function()
   -- première fois : toutes tes communautés de personnages sont partagées (modifiable dans les options)

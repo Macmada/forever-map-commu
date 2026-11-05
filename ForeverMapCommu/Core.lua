@@ -85,8 +85,9 @@ ns.memberClub = {}
 -- connectés (état « inconnu » tant que la liste n'est pas chargée) : la liaison devient réciproque (05/11/2026 : l'un
 -- voyait l'autre, pas l'inverse)
 ns.peers = {}
--- Nom à viser pour un message privé : celui du personnage d'après son identifiant (GUID), pas le nom affiché par la
--- communauté (« Alain Tendance » avec un espace : « aucun joueur nommé… », 05/11/2026). Royaume sans espaces.
+-- Nom à viser pour un message privé : celui du personnage d'après son identifiant (GUID) quand le jeu le donne, sinon le
+-- nom de la communauté. Sur WoW Forever, un personnage a un prénom ET un nom (« Alain Tendance ») : on garde le nom
+-- complet, espace compris. Seul le royaume perd ses espaces (« Nom-Royaume »).
 function ns.WhisperName(info)
   if info.guid and GetPlayerInfoByGUID then
     local ok, _, _, _, _, _, name, realm = pcall(GetPlayerInfoByGUID, info.guid)
@@ -94,9 +95,11 @@ function ns.WhisperName(info)
       return (realm and realm ~= "") and (name .. "-" .. realm:gsub("%s", "")) or name
     end
   end
-  local n = info.name or ""
-  if n:find("-", 1, true) then return (n:gsub("%s", "")) end
-  return n:match("^(%S+)")                       -- « Prénom Titre » : le premier mot est le nom du personnage
+  local n = (info.name or ""):match("^%s*(.-)%s*$")
+  if n == "" then return nil end
+  local who, realm = n:match("^(.-)%-(.+)$")
+  if who and realm then return who .. "-" .. realm:gsub("%s", "") end
+  return n
 end
 
 -- Membres absents : le jeu répond « aucun joueur nommé… » ; on ne les recontacte pas avant 5 min (ou leur retour)

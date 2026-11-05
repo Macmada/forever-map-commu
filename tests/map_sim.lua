@@ -75,6 +75,14 @@ check(not ns.members.Machin, "ton propre message est ignoré")
 W.fire("CHAT_MSG_ADDON", "AUTRE", "P|1426|0.1|0.1|5|PRIEST|X|", "CHANNEL", "Lyra", ch1, 0, 1, ch1)
 check(not ns.members.Lyra, "message d'un autre addon ignoré")
 
+-- liaison réciproque : un membre absent de ma liste « connectés » (état inconnu) mais qui m'envoie sa position
+sent = {}
+W.fire("CHAT_MSG_ADDON", "FMAP1", "P|1426|0.4300|0.5|6|HUNTER|Z|", "WHISPER", "Inconnu-Forever", "Machin", 0, 0, "")
+W.run(2)
+local back = false
+for _, m in ipairs(sent) do if m[3] == "WHISPER" and m[4] == "Inconnu-Forever" then back = true end end
+check(back, "premier contact : je lui réponds aussitôt (il me verra même si sa liste ne me montre pas connecté)")
+
 -- distance et minicarte
 POS.x = 0.40
 local d, dx = ns.Distance(g)
@@ -83,7 +91,7 @@ local mx, my = ns.MinimapOffset(100, 0, 200, 70)
 check(math.abs(mx - 35) < 0.01 and math.abs(my) < 0.01, "minicarte : 100 m à l'est, rayon 200 m = 35 px à droite")
 check(ns.MinimapOffset(300, 0, 200, 70) == nil, "minicarte : hors du rayon, pas de point")
 ns.UpdateMinimapPins()
-check(ns.miniPinsShown == 2, "minicarte : un point pour Grosbill et un pour Absent")
+check(ns.miniPinsShown == 3, "minicarte : un point par membre proche")
 
 -- carte du monde
 _G.WorldMapFrame = W.Obj("WorldMapFrame")
@@ -91,7 +99,7 @@ WorldMapFrame.ScrollContainer = { Child = W.Obj() }
 WorldMapFrame.GetMapID = function() return 1426 end
 WorldMapFrame:Show()
 ns.UpdateWorldPins()
-check(ns.worldPinsShown == 2, "carte du monde : deux points")
+check(ns.worldPinsShown == 3, "carte du monde : un point par membre")
 
 -- instance : pas de position envoyée
 W.inInstance, W.instanceType = true, "party"

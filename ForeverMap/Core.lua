@@ -81,6 +81,10 @@ end
 -- Envoi principal : un message privé d'addon à chacun (le client de Forever ne transmet pas les messages d'addon d'un
 -- canal personnalisé, diagnostic du 05/11/2026 : envoyés des deux côtés, jamais reçus).
 ns.memberClub = {}
+-- Membres dont on a reçu une position : on leur renvoie la nôtre même si la liste de la communauté ne les montre pas
+-- connectés (état « inconnu » tant que la liste n'est pas chargée) : la liaison devient réciproque (05/11/2026 : l'un
+-- voyait l'autre, pas l'inverse)
+ns.peers = {}
 function ns.OnlineMembers(clubId)
   local out = {}
   if not (C_Club and C_Club.GetClubMembers and C_Club.GetMemberInfo) then return out end
@@ -171,6 +175,12 @@ function ns.Broadcast(force)
       end
     end
   end
+  -- 1b. membres qui nous ont envoyé leur position récemment
+  for full, t in pairs(ns.peers) do
+    local short = full:match("^([^%-]+)") or full
+    if Now() - t > ns.FORGET then ns.peers[full] = nil
+    elseif short ~= me and not done[short] and #results < 40 then done[short] = true; Send("WHISPER", full) end
+  end
   -- 2. canaux cachés (si le client les transmet un jour) et guilde
   for name in pairs(ns.channelClub or {}) do
     local idx = ChannelIndex(name)
@@ -202,7 +212,13 @@ function ns.OnAddonMessage(prefix, text, channel, sender, _, _, _, chanName)
     src = club or "channel"
   end
   p.t, p.src, p.name = Now(), src, Short(sender)
+  local isNew = not ns.peers[sender]
   ns.members[Short(sender)] = p
+  if channel == "WHISPER" or channel == "CHANNEL" then
+    ns.peers[sender] = Now()
+    -- premier contact : on répond tout de suite, pour qu'il nous voie aussi
+    if isNew and db and not db.hidden then C_Timer.After(1, function() ns.Broadcast(true) end) end
+  end
   if ns.OnMembersChanged then ns.OnMembersChanged() end
 end
 

@@ -397,6 +397,9 @@ function ns.DiagText()
     local on = ns.OnlineMembers(c.id)
     add(string.format("  %s : %d membre(s) connecté(s) vu(s) par l'addon : %s", c.name, #on, table.concat(on, ", ")))
   end
+  local peers = {}
+  for full in pairs(ns.peers or {}) do peers[#peers + 1] = full end
+  add("Membres à qui je réponds (ils m'ont envoyé leur position) : " .. (#peers > 0 and table.concat(peers, ", ") or "aucun"))
   add("Dernier envoi : " .. tostring(ns.lastSent))
   for _, r in ipairs(ns.lastResults or {}) do add("  " .. r) end
   local n = 0
